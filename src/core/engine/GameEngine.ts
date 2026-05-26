@@ -169,6 +169,7 @@ export class GameEngine {
   }
 
   destroy(): void {
+    this.sys.winSystem.destroy();
     this.sys.scaleManager.destroy();
     this.sys.app.destroy(true);
     this.systems = null;

@@ -83,10 +83,16 @@ export class WinSystem {
       this.app.ticker.remove(this.pulseListener);
       this.pulseListener = null;
     }
+    this.pulseTime = 0;
     this.overlay.alpha = 1;
     this.overlay.removeChildren();
     this.winBanner.visible = false;
     this.winBanner.removeChildren();
+  }
+
+  destroy(): void {
+    this.clear();
+    this.container.destroy({ children: true });
   }
 
   showFreeSpinBanner(spinsAwarded: number): Promise<void> {
