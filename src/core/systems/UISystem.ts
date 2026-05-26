@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, Application } from "pixi.js";
+import { Container, Graphics, BitmapText, Application } from "pixi.js";
 import type { TextStyleFontWeight } from "pixi.js";
 import { DESIGN_W, DESIGN_H } from "./ScaleManager";
 import type { GameContext } from "../types/GameState";
@@ -37,12 +37,12 @@ const DEFAULT_THEME: UIThemeConfig = {
 
 export class UISystem {
   readonly container: Container;
-  private balanceLabel: Text;
-  private betLabel: Text;
+  private balanceLabel: BitmapText;
+  private betLabel: BitmapText;
   private spinBtn: Container;
   private spinBtnBg: Graphics;
-  private spinBtnLabel: Text;
-  private freeSpinLabel: Text;
+  private spinBtnLabel: BitmapText;
+  private freeSpinLabel: BitmapText;
   private playAgainOverlay: Container;
   private spinCallback?: () => void;
   private betChangeCallback?: (delta: number) => void;
@@ -213,8 +213,9 @@ export class UISystem {
     container.on("pointerout", () => container.scale.set(1));
   }
 
-  private buildLabel(config: LabelConfig): Text {
+  private buildLabel(config: LabelConfig): BitmapText {
     const style = {
+      fontFamily: 'Arial',
       ...(config.fontSize !== undefined && { fontSize: config.fontSize }),
       ...(config.fill !== undefined && { fill: config.fill }),
       ...(config.fontWeight !== undefined && { fontWeight: config.fontWeight }),
@@ -223,7 +224,7 @@ export class UISystem {
       }),
     };
 
-    const label = new Text({ text: config.text, style });
+    const label = new BitmapText({ text: config.text, style });
     label.anchor.set(config.anchorX ?? 0, config.anchorY ?? 0);
     label.x = config.x;
     label.y = config.y;
@@ -269,7 +270,7 @@ export class UISystem {
     this.container.addChild(bg);
   }
 
-  private buildSpinButton(): { btn: Container; bg: Graphics; label: Text } {
+  private buildSpinButton(): { btn: Container; bg: Graphics; label: BitmapText } {
     const btn = new Container();
     btn.x = DESIGN_W - 30 - this.theme.btnRadius;
     btn.y = this.barCenterY;
@@ -284,9 +285,10 @@ export class UISystem {
     bg.tint = this.theme.btnColorIdle;
     btn.addChild(bg);
 
-    const label = new Text({
+    const label = new BitmapText({
       text: "SPIN",
       style: {
+        fontFamily: 'Arial',
         fontSize: 16,
         fill: 0xffffff,
         fontWeight: "bold",
@@ -328,9 +330,10 @@ export class UISystem {
     panel.stroke({ color: 0xffd700, width: 3, alpha: 0.9 });
     overlay.addChild(panel);
 
-    const msg = new Text({
+    const msg = new BitmapText({
       text: "OUT OF FUNDS",
       style: {
+        fontFamily: 'Arial',
         fontSize: 22,
         fill: 0xffd700,
         fontWeight: "bold",
@@ -347,9 +350,10 @@ export class UISystem {
     btnBg.fill(0x22cc55);
     btnBg.stroke({ color: 0xffffff, width: 2, alpha: 0.4 });
 
-    const btnLabel = new Text({
+    const btnLabel = new BitmapText({
       text: "PLAY AGAIN",
       style: {
+        fontFamily: 'Arial',
         fontSize: 18,
         fill: 0xffffff,
         fontWeight: "bold",
@@ -388,9 +392,9 @@ export class UISystem {
       bg.stroke({ color: 0xffffff, width: 1, alpha: 0.3 });
       btn.addChild(bg);
 
-      const label = new Text({
+      const label = new BitmapText({
         text,
-        style: { fontSize: 18, fill: 0xffffff, fontWeight: "bold" },
+        style: { fontFamily: 'Arial', fontSize: 18, fill: 0xffffff, fontWeight: "bold" },
       });
       label.anchor.set(0.5);
       btn.addChild(label);

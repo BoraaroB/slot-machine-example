@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, Application, Ticker } from 'pixi.js';
+import { Container, Graphics, BitmapText, Application, Ticker } from 'pixi.js';
 import type { GameConfig } from '../types/GameConfig';
 import type { WinLine } from '../types/SpinResult';
 import type { ReelSystem } from './ReelSystem';
@@ -105,9 +105,9 @@ export class WinSystem {
     bg.stroke({ color: 0xffd700, width: 3 });
     this.winBanner.addChild(bg);
 
-    const title = new Text({
-      text: `🎰 FREE SPINS x${spinsAwarded}!`,
-      style: { fontSize: 32, fill: 0xffd700, fontWeight: 'bold' },
+    const title = new BitmapText({
+      text: `FREE SPINS x${spinsAwarded}!`,
+      style: { fontFamily: 'Arial', fontSize: 32, fill: 0xffd700, fontWeight: 'bold' },
     });
     title.anchor.set(0.5);
     this.winBanner.addChild(title);
@@ -125,9 +125,9 @@ export class WinSystem {
     bg.stroke({ color: 0xffd700, width: 3 });
     this.winBanner.addChild(bg);
 
-    const title = new Text({
+    const title = new BitmapText({
       text: 'FREE SPINS ENDED',
-      style: { fontSize: 28, fill: 0xffd700, fontWeight: 'bold' },
+      style: { fontFamily: 'Arial', fontSize: 28, fill: 0xffd700, fontWeight: 'bold' },
     });
     title.anchor.set(0.5);
     this.winBanner.addChild(title);
@@ -155,9 +155,9 @@ export class WinSystem {
     bg.stroke({ color: 0xffff00, width: 3 });
     this.winBanner.addChild(bg);
 
-    const label = new Text({
+    const label = new BitmapText({
       text: `WIN  $${totalWin}`,
-      style: { fontSize: 30, fill: 0xffff00, fontWeight: 'bold' },
+      style: { fontFamily: 'Arial', fontSize: 30, fill: 0xffff00, fontWeight: 'bold' },
     });
     label.anchor.set(0.5);
     this.winBanner.addChild(label);
