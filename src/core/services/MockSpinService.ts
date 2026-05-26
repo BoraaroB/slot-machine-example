@@ -1,6 +1,7 @@
 import type { ISpinService } from './ISpinService';
 import type { GameConfig } from '../types/GameConfig';
 import type { SpinResult, WinLine } from '../types/SpinResult';
+import { delay, weightedRandom } from '../utils';
 
 export class MockSpinService implements ISpinService {
   private balance: number;
@@ -30,18 +31,8 @@ export class MockSpinService implements ISpinService {
 
   private generateReels(): string[][] {
     return Array.from({ length: this.config.reelCount }, () =>
-      Array.from({ length: this.config.rowCount }, () => this.weightedRandom())
+      Array.from({ length: this.config.rowCount }, () => weightedRandom(this.config.symbols))
     );
-  }
-
-  private weightedRandom(): string {
-    const total = this.config.symbols.reduce((sum, s) => sum + s.weight, 0);
-    let rng = Math.random() * total;
-    for (const symbol of this.config.symbols) {
-      rng -= symbol.weight;
-      if (rng <= 0) return symbol.id;
-    }
-    return this.config.symbols[this.config.symbols.length - 1].id;
   }
 
   private calculateWins(reels: string[][], bet: number): WinLine[] {
@@ -92,6 +83,3 @@ export class MockSpinService implements ISpinService {
   }
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}

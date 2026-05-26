@@ -24,13 +24,13 @@ export interface UILabelsConfig {
 }
 
 const DEFAULT_THEME: UIThemeConfig = {
-  btnColorIdle:    0x22cc55,
+  btnColorIdle: 0x22cc55,
   btnColorDisabled: 0x556655,
-  btnColorFree:    0xffd700,
-  btnRadius:       48,
-  barHeight:       110,
-  barBgColor:      0x000000,
-  barBgAlpha:      0.55,
+  btnColorFree: 0xffd700,
+  btnRadius: 48,
+  barHeight: 110,
+  barBgColor: 0x000000,
+  barBgAlpha: 0.55,
   barDividerColor: 0xffffff,
   barDividerAlpha: 0.15,
 };
@@ -56,7 +56,7 @@ export class UISystem {
   private readonly barCenterY: number;
 
   private balanceCurrent = 0;
-  private balanceRafId   = 0;
+  private balanceRafId = 0;
 
   constructor(
     app: Application,
@@ -169,18 +169,18 @@ export class UISystem {
     }
 
     const duration = 900;
-    const start    = performance.now();
+    const start = performance.now();
 
     const step = () => {
-      const t      = Math.min((performance.now() - start) / duration, 1);
-      const eased  = 1 - Math.pow(1 - t, 3); // ease-out cubic
+      const t = Math.min((performance.now() - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
       this.balanceCurrent = Math.round(from + (balance - from) * eased);
       this.balanceLabel.text = `$${this.balanceCurrent}`;
       if (t < 1) {
         this.balanceRafId = requestAnimationFrame(step);
       } else {
         this.balanceCurrent = balance;
-        this.balanceRafId   = 0;
+        this.balanceRafId = 0;
       }
     };
 
@@ -200,11 +200,18 @@ export class UISystem {
     this.isFreeSpinMode = active;
     this.freeSpinLabel.visible = active;
     if (this.spinEnabled) {
-      this.spinBtnBg.tint = active ? this.theme.btnColorFree : this.theme.btnColorIdle;
+      this.spinBtnBg.tint = active
+        ? this.theme.btnColorFree
+        : this.theme.btnColorIdle;
     }
   }
 
   // ─── private builders ──────────────────────────────────────────────────────
+
+  private addHoverScale(container: Container, hoverScale = 1.07): void {
+    container.on("pointerover", () => container.scale.set(hoverScale));
+    container.on("pointerout", () => container.scale.set(1));
+  }
 
   private buildLabel(config: LabelConfig): Text {
     const style = {
@@ -254,7 +261,11 @@ export class UISystem {
     bg.fill({ color: this.theme.barBgColor, alpha: this.theme.barBgAlpha });
     bg.moveTo(0, this.barTop);
     bg.lineTo(DESIGN_W, this.barTop);
-    bg.stroke({ color: this.theme.barDividerColor, width: 1, alpha: this.theme.barDividerAlpha });
+    bg.stroke({
+      color: this.theme.barDividerColor,
+      width: 1,
+      alpha: this.theme.barDividerAlpha,
+    });
     this.container.addChild(bg);
   }
 
@@ -319,7 +330,12 @@ export class UISystem {
 
     const msg = new Text({
       text: "OUT OF FUNDS",
-      style: { fontSize: 22, fill: 0xffd700, fontWeight: "bold", letterSpacing: 2 },
+      style: {
+        fontSize: 22,
+        fill: 0xffd700,
+        fontWeight: "bold",
+        letterSpacing: 2,
+      },
     });
     msg.anchor.set(0.5);
     msg.x = cx;
@@ -333,7 +349,12 @@ export class UISystem {
 
     const btnLabel = new Text({
       text: "PLAY AGAIN",
-      style: { fontSize: 18, fill: 0xffffff, fontWeight: "bold", letterSpacing: 1 },
+      style: {
+        fontSize: 18,
+        fill: 0xffffff,
+        fontWeight: "bold",
+        letterSpacing: 1,
+      },
     });
     btnLabel.anchor.set(0.5);
 
@@ -346,8 +367,7 @@ export class UISystem {
     btn.addChild(btnLabel);
 
     btn.on("pointerdown", () => this.playAgainCallback?.());
-    btn.on("pointerover", () => btn.scale.set(1.07));
-    btn.on("pointerout", () => btn.scale.set(1));
+    this.addHoverScale(btn);
 
     overlay.addChild(btn);
     this.container.addChild(overlay);
@@ -376,8 +396,7 @@ export class UISystem {
       btn.addChild(label);
 
       btn.on("pointerdown", () => this.betChangeCallback?.(delta));
-      btn.on("pointerover", () => btn.scale.set(1.1));
-      btn.on("pointerout", () => btn.scale.set(1));
+      this.addHoverScale(btn, 1.1);
 
       this.container.addChild(btn);
     };

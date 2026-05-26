@@ -1,5 +1,6 @@
 import { Container, Graphics, Text, Application, BlurFilter } from 'pixi.js';
 import { DESIGN_W } from './ScaleManager';
+import { weightedRandom } from '../utils';
 import type { GameConfig, SymbolConfig } from '../types/GameConfig';
 
 const SYMBOL_W = 150;
@@ -56,8 +57,7 @@ class ReelView {
   private tiles: SymbolTile[];
   private symbolIds: string[];
   private readonly symbolMap: Map<string, SymbolConfig>;
-  private readonly allIds: string[];
-  private readonly totalWeight: number;
+  private readonly weightedSymbols: ReadonlyArray<{ id: string; weight: number }>;
   private readonly blurFilter: BlurFilter;
 
   private scrollY    = 0;
@@ -71,9 +71,8 @@ class ReelView {
   private overshootY = 0;
 
   constructor(symbolMap: Map<string, SymbolConfig>, allIds: string[]) {
-    this.symbolMap   = symbolMap;
-    this.allIds      = allIds;
-    this.totalWeight = allIds.reduce((s, id) => s + (symbolMap.get(id)?.weight ?? 1), 0);
+    this.symbolMap       = symbolMap;
+    this.weightedSymbols = allIds.map(id => ({ id, weight: symbolMap.get(id)?.weight ?? 1 }));
 
     this.container = new Container();
     this.strip     = new Container();
@@ -214,12 +213,7 @@ class ReelView {
   }
 
   private randomId(): string {
-    let r = Math.random() * this.totalWeight;
-    for (const id of this.allIds) {
-      r -= this.symbolMap.get(id)?.weight ?? 1;
-      if (r <= 0) return id;
-    }
-    return this.allIds[this.allIds.length - 1];
+    return weightedRandom(this.weightedSymbols);
   }
 }
 

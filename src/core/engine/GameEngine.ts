@@ -1,16 +1,15 @@
 import { Application } from "pixi.js";
 import { StateMachine } from "./StateMachine";
+import { BetController, BET_OPTIONS } from "./BetController";
 import { ReelSystem } from "../systems/ReelSystem";
 import { WinSystem } from "../systems/WinSystem";
 import { UISystem } from "../systems/UISystem";
 import { ScaleManager, DESIGN_W, DESIGN_H } from "../systems/ScaleManager";
 import { GameStateType } from "../types/GameState";
+import { delay } from "../utils";
 import type { GameConfig } from "../types/GameConfig";
 import type { ISpinService } from "../services/ISpinService";
 import type { GameContext } from "../types/GameState";
-
-const BET_OPTIONS = [10, 20, 50, 70, 100];
-const INITIAL_BET_INDEX = 0;
 
 interface Systems {
   app: Application;
@@ -24,7 +23,7 @@ export class GameEngine {
   private systems: Systems | null = null;
   private sm: StateMachine;
   private ctx: GameContext;
-  private betIndex = INITIAL_BET_INDEX;
+  private betController!: BetController;
 
   private get sys(): Systems {
     if (!this.systems) throw new Error("GameEngine.init() has not been called");
@@ -38,7 +37,7 @@ export class GameEngine {
     this.sm = new StateMachine();
     this.ctx = {
       balance: 1000,
-      bet: BET_OPTIONS[INITIAL_BET_INDEX],
+      bet: BET_OPTIONS[0],
       lastResult: null,
       freeSpinsRemaining: 0,
       isFreeSpinMode: false,
@@ -64,15 +63,13 @@ export class GameEngine {
     const uiSystem = new UISystem(app, this.ctx, this.config);
 
     this.systems = { app, scaleManager, reelSystem, winSystem, uiSystem };
+    this.betController = new BetController(this.ctx, this.sm, uiSystem);
 
     winSystem.positionBanner(DESIGN_W / 2, DESIGN_H / 2);
 
     uiSystem.onSpin(() => void this.handleSpin());
-    uiSystem.onBetChange((delta) => {
-      console.log("Bet change requested, delta:", delta);
-      this.changeBet(delta);
-    });
-    uiSystem.onPlayAgain(() => this.handlePlayAgain());
+    uiSystem.onBetChange(delta => this.betController.change(delta));
+    uiSystem.onPlayAgain(() => this.betController.handlePlayAgain());
 
     app.ticker.add((ticker) => {
       this.sys.reelSystem.update(ticker.deltaTime);
@@ -90,7 +87,7 @@ export class GameEngine {
       !this.sm.is(GameStateType.FREE_SPIN_IDLE)
     )
       return;
-    if (this.ctx.balance < BET_OPTIONS[0] || this.ctx.balance < this.ctx.bet)
+    if (this.ctx.balance < this.betController.minBet || this.ctx.balance < this.ctx.bet)
       return;
 
     const { uiSystem, winSystem } = this.sys;
@@ -112,8 +109,8 @@ export class GameEngine {
     }
 
     this.sm.transition(GameStateType.IDLE);
-    this.syncBetToBalance();
-    if (this.ctx.balance >= BET_OPTIONS[0]) uiSystem.setSpinEnabled(true);
+    this.betController.syncToBalance();
+    if (this.ctx.balance >= this.betController.minBet) uiSystem.setSpinEnabled(true);
   }
 
   private async runFreeSpins(): Promise<void> {
@@ -136,8 +133,8 @@ export class GameEngine {
 
     this.sm.transition(GameStateType.FREE_SPIN_OUTRO);
     this.sm.transition(GameStateType.IDLE);
-    this.syncBetToBalance();
-    if (this.ctx.balance >= BET_OPTIONS[0]) uiSystem.setSpinEnabled(true);
+    this.betController.syncToBalance();
+    if (this.ctx.balance >= this.betController.minBet) uiSystem.setSpinEnabled(true);
   }
 
   private async executeSpin(isFree: boolean, winDelay: number) {
@@ -174,51 +171,4 @@ export class GameEngine {
     this.sys.app.destroy(true);
     this.systems = null;
   }
-
-  // ─── bet controls ──────────────────────────────────────────────────────────
-
-  private changeBet(delta: number): void {
-    if (!this.sm.is(GameStateType.IDLE)) return;
-    let maxIndex = BET_OPTIONS.length - 1;
-    while (maxIndex > 0 && BET_OPTIONS[maxIndex] > this.ctx.balance) maxIndex--;
-    if (maxIndex < 0) return;
-    this.betIndex = Math.min(maxIndex, Math.max(0, this.betIndex + delta));
-    this.ctx.bet = BET_OPTIONS[this.betIndex];
-    this.sys.uiSystem.updateBet(this.ctx.bet);
-  }
-
-  private handlePlayAgain(): void {
-    this.ctx.balance = 1000;
-    this.betIndex = INITIAL_BET_INDEX;
-    this.ctx.bet = BET_OPTIONS[this.betIndex];
-    const { uiSystem } = this.sys;
-    uiSystem.hidePlayAgain();
-    uiSystem.updateBalance(this.ctx.balance);
-    uiSystem.updateBet(this.ctx.bet);
-    uiSystem.setSpinEnabled(true);
-    this.sm.transition(GameStateType.IDLE);
-  }
-
-  private syncBetToBalance(): void {
-    const { uiSystem } = this.sys;
-    if (this.ctx.balance < BET_OPTIONS[0]) {
-      this.betIndex = 0;
-      this.ctx.bet = BET_OPTIONS[0];
-      uiSystem.updateBet(this.ctx.bet);
-      uiSystem.setSpinEnabled(false);
-      uiSystem.showPlayAgain();
-      return;
-    }
-    let maxIndex = BET_OPTIONS.length - 1;
-    while (maxIndex > 0 && BET_OPTIONS[maxIndex] > this.ctx.balance) maxIndex--;
-    if (this.betIndex > maxIndex) {
-      this.betIndex = maxIndex;
-      this.ctx.bet = BET_OPTIONS[this.betIndex];
-      uiSystem.updateBet(this.ctx.bet);
-    }
-  }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
