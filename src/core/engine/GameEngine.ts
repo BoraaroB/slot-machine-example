@@ -93,30 +93,10 @@ export class GameEngine {
     if (this.ctx.balance < BET_OPTIONS[0] || this.ctx.balance < this.ctx.bet)
       return;
 
-    const { uiSystem, winSystem, reelSystem } = this.sys;
-
-    this.sm.transition(GameStateType.SPINNING);
+    const { uiSystem, winSystem } = this.sys;
     uiSystem.setSpinEnabled(false);
-    winSystem.clear();
 
-    const requestPromise = this.spinService.spin(this.ctx.bet);
-    reelSystem.startSpin();
-
-    const [result] = await Promise.all([requestPromise, delay(800)]);
-    this.ctx.lastResult = result;
-    this.ctx.balance = result.balance;
-
-    await reelSystem.stopSpin(result.reels);
-
-    this.sm.transition(GameStateType.REVEALING);
-    uiSystem.updateBalance(result.balance);
-
-    if (result.winLines.length > 0) {
-      this.sm.transition(GameStateType.WIN_PRESENTATION);
-      winSystem.show(result.winLines, result.totalWin);
-      await delay(2200);
-      winSystem.clear();
-    }
+    const result = await this.executeSpin(false, 2200);
 
     if (result.freeSpins) {
       this.ctx.freeSpinsRemaining = result.freeSpins.remaining;
@@ -145,7 +125,8 @@ export class GameEngine {
       this.ctx.freeSpinsRemaining--;
       uiSystem.updateFreeSpins(this.ctx.freeSpinsRemaining);
 
-      await this.runOneSpin(true);
+      await this.executeSpin(true, 1800);
+      this.sm.transition(GameStateType.FREE_SPIN_IDLE);
       await delay(500);
     }
 
@@ -159,7 +140,7 @@ export class GameEngine {
     if (this.ctx.balance >= BET_OPTIONS[0]) uiSystem.setSpinEnabled(true);
   }
 
-  private async runOneSpin(isFree = false): Promise<void> {
+  private async executeSpin(isFree: boolean, winDelay: number) {
     const { uiSystem, winSystem, reelSystem } = this.sys;
 
     this.sm.transition(GameStateType.SPINNING);
@@ -180,11 +161,11 @@ export class GameEngine {
     if (result.winLines.length > 0) {
       this.sm.transition(GameStateType.WIN_PRESENTATION);
       winSystem.show(result.winLines, result.totalWin);
-      await delay(1800);
+      await delay(winDelay);
       winSystem.clear();
     }
 
-    this.sm.transition(GameStateType.FREE_SPIN_IDLE);
+    return result;
   }
 
   destroy(): void {

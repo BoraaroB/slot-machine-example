@@ -18,7 +18,7 @@ Interactive HTML5 slot machine game built with PixiJS v8 and TypeScript.
 ## Symbols & Paytable
 
 | Symbol | Label | 3-of-a-kind payout |
-|--------|-------|--------------------|
+| ------ | ----- | ------------------ |
 | Seven  | 7     | 50× bet            |
 | Bar    | BAR   | 20× bet            |
 | Bell   | 🔔    | 10× bet            |
@@ -28,11 +28,11 @@ Interactive HTML5 slot machine game built with PixiJS v8 and TypeScript.
 
 ## Tech Stack
 
-| Tool | Version |
-|------|---------|
-| PixiJS | ^8.0 |
-| TypeScript | ^5.5 |
-| Vite | ^5.4 |
+| Tool       | Version |
+| ---------- | ------- |
+| PixiJS     | ^8.0    |
+| TypeScript | ^5.5    |
+| Vite       | ^5.4    |
 
 ## Architecture
 
@@ -67,7 +67,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Other Scripts
 
@@ -81,10 +81,13 @@ npm run preview  # Preview the production build locally
 Create a new config file following the `GameConfig` interface and pass it to `GameEngine`:
 
 ```ts
-import { GameEngine } from './core/engine/GameEngine';
-import { MockSpinService } from './core/services/MockSpinService';
-import { myThemeConfig } from './games/my-theme/config';
+import { GameEngine } from "./core/engine/GameEngine";
+import { MockSpinService } from "./core/services/MockSpinService";
+import { myThemeConfig } from "./games/my-theme/config";
 
-const engine = new GameEngine(myThemeConfig, new MockSpinService(myThemeConfig));
+const engine = new GameEngine(
+  myThemeConfig,
+  new MockSpinService(myThemeConfig),
+);
 await engine.init();
 ```
